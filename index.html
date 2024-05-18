@@ -87,13 +87,18 @@
 
         // Create a new WebSocket connection to the server
         const socket = io();
-
+        let currentRoom;
         joinRoom.addEventListener("click" , ()=>{
             socket.emit("joinRoom" , roomID.value);
+            currentRoom = roomID.value;
         })
         
         // Event listener for when the send button is clicked
         sendButton.addEventListener("click", () => {
+            if(!currentRoom) {
+                window.alert("Please join a Room")
+                return;
+            }
             // Get the value of the message input field
             const newMessage = message.value;
             const room_Id = roomID.value;
@@ -135,9 +140,6 @@
             chats.scrollTop = chats.scrollHeight;
         }
 
-
-        // creating a toom in 
-        socket.emit('create', 'room1');
 
 
     </script>
