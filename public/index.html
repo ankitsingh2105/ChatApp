@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Sockets</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #messages {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .message p {
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .sent {
+            justify-content: flex-end;
+        }
+
+        .sent p {
+            background-color: #dcf8c6;
+            text-align: right;
+        }
+
+        .received {
+            justify-content: flex-start;
+        }
+
+        .received p {
+            background-color: #f1f0f0;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chatting Application</h1>
+    <center><h1 id="userName"></h1></center>
+    <input id="roomID" type="text" placeholder="Enter Room Id">
+    <button id="joinRoom">Create / Join Room</button>
+    <br>
+    <br>
+    <input id="messageInput" type="text" placeholder="Enter Message">
+    <button id="sendButton">Send</button>
+    <br>
+    <br>
+    <div id="messages"></div>
+
+    <!-- Script tag to include the Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let check = 0;
+        let name;
+        if (check === 0) {
+            name = window.prompt("Enter your name");
+
+            if (name) {
+                check = 1;
+                console.log("Name entered:", name);
+                console.log("Check is now:", check);
+                document.getElementById("userName").innerText = name
+            } else {
+                console.log("No name entered.");
+            }
+        }
+        const message = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+        const chats = document.getElementById("messages");
+        const roomID = document.getElementById("roomID");
+        const joinRoom = document.getElementById("joinRoom");
+
+        // Create a new WebSocket connection to the server
+        const socket = io();
+
+        joinRoom.addEventListener("click" , ()=>{
+            socket.emit("joinRoom" , roomID.value);
+        })
+        
+        // Event listener for when the send button is clicked
+        sendButton.addEventListener("click", () => {
+            // Get the value of the message input field
+            const newMessage = message.value;
+            const room_Id = roomID.value;
+            // Emit a 'user-message-name' event to the server with the message
+            socket.emit("user-message-name-room", { newMessage, name, room_Id});
+            // Add the message to the chat area as a sent message
+            // Clear the input field 
+            message.value = "";
+        });
+        
+        // Event listener for when the server sends a 'message and name' event
+        socket.on("message and name", (info) => {
+            // Add the message to the chat area as a received message
+            const userId = socket.id;
+            if(userId === info.user_id){
+                addMessageToChat(name, info.newMessage, "sent");
+            }
+            else{
+                addMessageToChat(info.name, info.newMessage, "received");
+            }
+        });
+
+        function addMessageToChat(name, message, type) {
+            // Create a new div element for the message
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${type}`;
+
+            // Create a new paragraph element to display the message
+            const newElem = document.createElement("p");
+            newElem.innerText = `${name}: ${message}`;
+
+            // Append the paragraph to the message div
+            messageDiv.appendChild(newElem);
+
+            // Append the message div to the chats container
+            chats.appendChild(messageDiv);
+
+            // Scroll to the bottom of the chat container
+            chats.scrollTop = chats.scrollHeight;
+        }
+
+
+        // creating a toom in 
+        socket.emit('create', 'room1');
+
+
+    </script>
+</body>
+
+</html>
