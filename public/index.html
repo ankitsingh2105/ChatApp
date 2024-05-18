@@ -51,7 +51,9 @@
 
 <body>
     <h1>Chatting Application</h1>
-    <center><h1 id="userName"></h1></center>
+    <center>
+        <h1 id="userName"></h1>
+    </center>
     <input id="roomID" type="text" placeholder="Enter Room Id">
     <button id="joinRoom">Create / Join Room</button>
     <br>
@@ -61,6 +63,7 @@
     <br>
     <br>
     <div id="messages"></div>
+    <div id="typing"></div>
 
     <!-- Script tag to include the Socket.IO client library -->
     <script src="/socket.io/socket.io.js"></script>
@@ -84,18 +87,21 @@
         const chats = document.getElementById("messages");
         const roomID = document.getElementById("roomID");
         const joinRoom = document.getElementById("joinRoom");
+        const whoTyping = document.getElementById("typing");
 
         // Create a new WebSocket connection to the server
         const socket = io();
         let currentRoom;
-        joinRoom.addEventListener("click" , ()=>{
-            socket.emit("joinRoom" , roomID.value);
+        joinRoom.addEventListener("click", () => {
+            socket.emit("joinRoom", roomID.value);
             currentRoom = roomID.value;
         })
-        
+
+
+
         // Event listener for when the send button is clicked
         sendButton.addEventListener("click", () => {
-            if(!currentRoom) {
+            if (!currentRoom) {
                 window.alert("Please join a Room")
                 return;
             }
@@ -103,20 +109,41 @@
             const newMessage = message.value;
             const room_Id = roomID.value;
             // Emit a 'user-message-name' event to the server with the message
-            socket.emit("user-message-name-room", { newMessage, name, room_Id});
+            socket.emit("user-message-name-room", { newMessage, name, room_Id });
             // Add the message to the chat area as a sent message
             // Clear the input field 
             message.value = "";
+            socket.emit("stopTyping");
         });
-        
+
+        // typing display
+        let typingTimeout;
+        message.addEventListener("input", () => {
+            if (!currentRoom) return;
+            socket.emit("typing", name);
+
+            clearTimeout(typingTimeout); // Clear the previous timeout
+            typingTimeout = setTimeout(() => {
+                socket.emit("stopTyping");
+            }, 2000); // Emit stopTyping event after 2 seconds of inactivity
+        });
+
+        socket.on("typing", (name) => {
+            whoTyping.innerText = `${name} is typing`;
+        })
+
+        socket.on("stopTyping", () => {
+            whoTyping.innerText = "";
+        })
+
         // Event listener for when the server sends a 'message and name' event
         socket.on("message and name", (info) => {
             // Add the message to the chat area as a received message
             const userId = socket.id;
-            if(userId === info.user_id){
+            if (userId === info.user_id) {
                 addMessageToChat(name, info.newMessage, "sent");
             }
-            else{
+            else {
                 addMessageToChat(info.name, info.newMessage, "received");
             }
         });

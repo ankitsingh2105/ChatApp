@@ -23,6 +23,7 @@ io.on("connection", (client) => {
     console.log("New user has connected", client.id);
 
     // Event listener for when the client sends a 'user-message' event
+    let roomID;
     client.on("user-message-name-room", (userInfo) => {
         // Logging the received message
         userInfo["user_id"] = client.id;
@@ -34,8 +35,17 @@ io.on("connection", (client) => {
 
     });
 
+    client.on("typing" , (name)=>{
+        console.log("client typing ", name , "and :: " , roomID);
+        io.to(roomID).emit("typing" , name);
+    })
+    
+    client.on("stopTyping" , ()=>{
+        io.to(roomID).emit("stopTyping");
+    })
 
     client.on('joinRoom', function(room) {
+        roomID = room;
         console.log("room is :: ", room);
         client.join(room);
     });
@@ -49,16 +59,15 @@ io.on("connection", (client) => {
 
 // todo :: "Serving static files" means providing files directly to web clients without any processing by a server-side program or script. These files are typically things like HTML, CSS, JavaScript, images, or other resources that make up the content and presentation of a web page or application.
 
-app.use(express.static("C:/Users/user/Desktop/Nodejs/Web Sockets/index.html"));
+app.use(express.static("./public"));
 
 app.get("/", (req, response) => {
-    response.sendFile("C:/Users/user/Desktop/Nodejs/Web Sockets/index.html");
+    response.sendFile("./index.html");
 })
 
 server.listen("3000", () => {
     console.log("ok");
 })
-
 // C:\Users\user\Desktop\Nodejs\Web Sockets\index.html
 
 
