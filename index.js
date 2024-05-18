@@ -1,4 +1,3 @@
-const { Socket } = require("dgram");
 const express = require("express");
 
 const app = express();
@@ -50,15 +49,17 @@ io.on("connection", (client) => {
 
 // todo :: "Serving static files" means providing files directly to web clients without any processing by a server-side program or script. These files are typically things like HTML, CSS, JavaScript, images, or other resources that make up the content and presentation of a web page or application.
 
-app.use(express.static("./public"));
+// app.use(express.static("./public"));
 
 app.get("/", (req, response) => {
-    response.sendFile("./public/index");
+    response.sendFile("C:/Users/user/Desktop/Nodejs/Web Sockets/index.html");
 })
 
 server.listen("3000", () => {
     console.log("ok");
 })
+
+// C:\Users\user\Desktop\Nodejs\Web Sockets\index.html
 
 
 
